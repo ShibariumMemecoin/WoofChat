@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WoofChat - Shiba Empire</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            background: #f0f2f5;
+            box-shadow: 0 0 20px rgba(255, 145, 0, 0.5);
+            display: flex;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 20%;
+            background: #2c2f33;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+        }
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: #ff9100;
+            color: #fff;
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            border-radius: 10px;
+            margin: 10px;
+        }
+        .connect-section {
+            padding: 10px;
+        }
+        .connect-section button {
+            padding: 10px;
+            background: #ff9100;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            width: 100%;
+            text-align: left;
+        }
+        .connect-section button:hover {
+            background: #e68a00;
+        }
+        .connect-section button.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        .button-group {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .button-group button {
+            padding: 10px;
+            background: #ff9100;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            width: 100%;
+            text-align: left;
+        }
+        .button-group button:hover {
+            background: #e68a00;
+        }
+        .button-group button.disabled {
+            background: #808080;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .user-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .user-item {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            border-bottom: 1px solid #3a3f44;
+            cursor: pointer;
+        }
+        .user-item:hover {
+            background: #3a3f44;
+        }
+        .user-item img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: contain;
+        }
+        .user-item .group-header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .user-item .group-name {
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 1em;
+            margin-right: auto;
+        }
+        .user-item .status {
+            font-size: 0.8em;
+            color: #43b581;
+            margin-top: 5px;
+            width: 100%;
+        }
+        .user-item .action-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+            width: 100%;
+            justify-content: flex-end;
+        }
+        .user-item button {
+            padding: 5px 10px;
+            background: #ff9100;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.8em;
+            cursor: pointer;
+        }
+        .user-item button:hover {
+            background: #e68a00;
+        }
+        .chat-header {
+            padding: 8px 12px;
+            background: #e5e5ea;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chat-header .info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chat-header .name {
+            font-weight: bold;
+            color: #333;
+            background: #d3d3d3;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        .chat-header .badge {
+            background: #d3d3d3;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #333;
+        }
+        .chat-header .refresh-btn {
+            padding: 6px 16px;
+            background: #ff9100;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .chat-header .refresh-btn:hover {
+            background: #e68a00;
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #e5e5ea;
+        }
+        .message {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+        .message.sent {
+            justify-content: flex-end;
+        }
+        .message.received {
+            justify-content: flex-start;
+        }
+        .message-content {
+            max-width: 60%;
+            padding: 10px;
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .message.sent .message-content {
+            background: #ffe082;
+            color: #333;
+        }
+        .message.received .message-content {
+            background: #fff;
+            color: #333;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .message:nth-child(even) .message-content {
+            background: #f0f0f0;
+        }
+        .message-sender {
+            font-size: 0.7em;
+            color: #999;
+            margin-bottom: 5px;
+        }
+        .message-text {
+            word-wrap: break-word;
+        }
+        .message-timestamp {
+            font-size: 0.6em;
+            color: #999;
+            align-self: flex-end;
+            margin-top: 5px;
+        }
+        .input-area {
+            display: flex;
+            padding: 8px 12px;
+            background: #e5e5ea;
+            border-top: 1px solid #ddd;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 6px 12px;
+            background: #d3d3d3;
+            color: #333;
+            border: none;
+            border-radius: 20px;
+            margin-right: 10px;
+            outline: none;
+            font-size: 0.9em;
+        }
+        .input-area .send-btn {
+            padding: 6px 16px;
+            background: #ff9100;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .input-area .send-btn:hover {
+            background: #e68a00;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            border: 2px solid #ff9100;
+            color: #333;
+        }
+        .modal-content input {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ff9100;
+            border-radius: 5px;
+        }
+        .custom-select {
+            position: relative;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .select-selected {
+            padding: 10px;
+            background: #d3d3d3;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.9em;
+        }
+        .select-selected:hover {
+            background: #c0c0c0;
+        }
+        .select-items {
+            position: absolute;
+            background: #fff;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .select-items.select-show {
+            display: block;
+        }
+        .select-item {
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .select-item:hover {
+            background: #f0f2f5;
+        }
+        .select-item img, .user-item img {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            object-fit: contain;
+        }
+        .status {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #ff9100;
+        }
+        @media (max-width: 600px) {
+            .container { height: 100vh; border-radius: 0; box-shadow: none; }
+            .sidebar { width: 35%; }
+            .chat-area { flex: 1; }
+            .header { font-size: 1em; }
+            .message-content { max-width: 80%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="header">WoofChat</div>
+            <div class="connect-section">
+                <button id="connectWalletButton">Connect Wallet</button>
+                <div id="networkStatus" class="status">Click to connect...</div>
+            </div>
+            <div class="button-group">
+                <button id="createGroupButton" onclick="openCreateGroupModal()">Create Group</button>
+                <button onclick="joinGroup()">Join Group</button>
+                <button id="setNicknameButton" onclick="openSetNicknameModal()">Set Nickname</button>
+            </div>
+            <ul class="user-list" id="groupList"></ul>
+        </div>
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="info">
+                    <div class="name" id="chatTitle">Select a Group</div>
+                    <div class="badge" id="messageCount">0 messages</div>
+                </div>
+                <button class="refresh-btn" onclick="loadMessages()">Refresh</button>
+            </div>
+            <div class="messages" id="messageList"></div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Woof something...">
+                <button class="send-btn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="createGroupModal">
+        <div class="modal-content">
+            <h2>Create Group</h2>
+            <input type="text" id="groupName" placeholder="Group Name (max 20 chars)">
+            <div class="custom-select" id="paymentTokenSelect">
+                <div class="select-selected"><img src="" alt="" style="display:none;">Select Token</div>
+                <div class="select-items" id="tokenOptions"></div>
+            </div>
+            <input type="text" id="joinFee" placeholder="Join Fee (min 10)">
+            <button onclick="createGroup()">Create</button>
+            <button onclick="closeModal('createGroupModal')">Cancel</button>
+            <div class="status" id="createStatus"></div>
+        </div>
+    </div>
+    <div class="modal" id="joinGroupModal">
+        <div class="modal-content">
+            <h2>Join Group</h2>
+            <input type="text" id="groupIdInput" placeholder="Group ID">
+            <div class="status" id="joinFeeInfo"></div>
+            <button onclick="joinGroupConfirm()">Join</button>
+            <button onclick="closeModal('joinGroupModal')">Cancel</button>
+            <div class="status" id="joinStatus"></div>
+        </div>
+    </div>
+    <div class="modal" id="setNicknameModal">
+        <div class="modal-content">
+            <h2>Set Nickname</h2>
+            <input type="text" id="nicknameInput" placeholder="Nickname (max 12 chars)">
+            <button onclick="setNickname()">Save</button>
+            <button onclick="closeModal('setNicknameModal')">Cancel</button>
+            <div class="status" id="nicknameStatus"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+    <script>
+        let web3, accounts, contract;
+        const contractAddress = "0xf34614AaBF9F83cF484c7CA29F6C76AD2be6c00B";
+        const contractABI = [
+            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":false,"internalType":"string","name":"name","type":"string"},{"indexed":true,"internalType":"address","name":"creator","type":"address"}],"name":"GroupCreated","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":true,"internalType":"address","name":"member","type":"address"}],"name":"MemberJoined","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":true,"internalType":"address","name":"member","type":"address"}],"name":"MemberLeft","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":true,"internalType":"address","name":"sender","type":"address"},{"indexed":false,"internalType":"string","name":"content","type":"string"}],"name":"MessageSent","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"newNickname","type":"string"},{"indexed":false,"internalType":"bool","name":"isInitialSet","type":"bool"}],"name":"NicknameUpdated","type":"event"},
+            {"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"address","name":"paymentToken","type":"address"},{"internalType":"uint256","name":"joinFee","type":"uint256"}],"name":"createGroup","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"}],"name":"getGroupMembersCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"},{"internalType":"uint256","name":"startIndex","type":"uint256"},{"internalType":"uint256","name":"count","type":"uint256"}],"name":"getMessages","outputs":[{"components":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"}],"internalType":"struct WoofChat.Message[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getNickname","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"creator","type":"address"}],"name":"getGroupIdByCreator","outputs":[{"internalType":"bool","name":"hasGroup","type":"bool"},{"internalType":"uint256","name":"groupId","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserJoinedGroups","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"string","name":"nickname","type":"string"}],"name":"isNicknameAvailable","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"}],"name":"joinGroup","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"}],"name":"leaveGroup","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"},{"internalType":"string","name":"content","type":"string"}],"name":"sendMessage","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"string","name":"nickname","type":"string"}],"name":"setNickname","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"tokenAddress","type":"address"}],"name":"withdrawAllTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[],"name":"withdrawBONE","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"groups","outputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"address","name":"paymentToken","type":"address"},{"internalType":"uint256","name":"joinFee","type":"uint256"},{"internalType":"uint256","name":"memberCount","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"stateMutability":"payable","type":"receive"}
+        ];
+        const shibarium = { chainId: 109, chainName: 'Shibarium', nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 }, rpcUrls: ['https://rpc.shibrpc.com'], blockExplorerUrls: ['https://shibariumscan.io'] };
+        const tokens = [
+            { address: "0xeCe898EdCc0AF91430603175F945D8de75291c70", symbol: "DAMN", logo: "images/damn.png" },
+            { address: "0xe9Cb2D7ADC24Fc59FE00D6C0A0669BDF16805Fe0", symbol: "FEED", logo: "images/feed.png" },
+            { address: "0x8f4b11d923BbAA6206f3Dd3ff84e8e31bafB49b7", symbol: "WOW", logo: "images/wow.png" },
+            { address: "0x632d1FF1fB27d88EDeDB90e70bFC094D7932A0ad", symbol: "SHIPA", logo: "images/shipa.png" },
+            { address: "0x61CFA29261d8151D39244b8FfCf8DFd2f9DF3839", symbol: "CHIKA", logo: "images/chika.png" },
+            { address: "0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834", symbol: "WOOF", logo: "images/woof.png" },
+            { address: "0x0b4FD6288b6d32171CC515bfFC9340026F56A358", symbol: "PIKA", logo: "images/pika.png" },
+            { address: "0x0cCD687CC6F8461170336D8e8cf46A39313DEab9", symbol: "LUISA", logo: "images/luisa.png" },
+            { address: "0xB9Ae1d4e474CC154F48e5C2f0559Eb3A78Ad1F09", symbol: "SHIBS", logo: "images/shibs.png" }
+        ];
+        let currentGroupId = null;
+
+        async function connectWallet() {
+            const status = document.getElementById('networkStatus');
+            const connectButton = document.getElementById('connectWalletButton');
+            try {
+                if (!window.ethereum) {
+                    status.innerHTML = 'No wallet detected. Please install <a href="https://metamask.io" target="_blank">MetaMask</a> and run via a local server (e.g., "npx serve").';
+                    throw new Error("No wallet detected");
+                }
+                connectButton.classList.add('loading');
+                status.innerText = "Connecting...";
+                web3 = new Web3(window.ethereum);
+                accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                if (!accounts.length) throw new Error("Unlock or connect wallet.");
+                const chainId = await web3.eth.getChainId();
+                if (chainId !== 109) {
+                    try {
+                        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: "0x6d" }] });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [shibarium] });
+                        else throw switchError;
+                    }
+                }
+                connectButton.textContent = `Connected: ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`;
+                contract = new web3.eth.Contract(contractABI, contractAddress);
+                status.innerText = "Connected to Shibarium";
+                updateButtons();
+                updateGroupList();
+                setupEventListeners();
+                initializeTokenSelect();
+            } catch (error) {
+                console.error(error);
+                status.innerText = "Failed: " + error.message;
+            } finally {
+                connectButton.classList.remove('loading');
+            }
+        }
+
+        function updateButtons() {
+            if (!contract || !accounts) return;
+            contract.methods.getGroupIdByCreator(accounts[0]).call()
+                .then(result => {
+                    const createButton = document.getElementById('createGroupButton');
+                    if (result.hasGroup) {
+                        createButton.textContent = `Group ID: ${result.groupId}`;
+                        createButton.classList.add('disabled');
+                        createButton.onclick = null;
+                    } else {
+                        createButton.textContent = 'Create Group';
+                        createButton.classList.remove('disabled');
+                        createButton.onclick = () => openCreateGroupModal();
+                    }
+                })
+                .catch(error => console.error(error));
+
+            contract.methods.getNickname(accounts[0]).call()
+                .then(nickname => {
+                    const nicknameButton = document.getElementById('setNicknameButton');
+                    if (nickname && nickname.trim() !== '') {
+                        nicknameButton.textContent = nickname;
+                        nicknameButton.classList.add('disabled');
+                        nicknameButton.onclick = null;
+                    } else {
+                        nicknameButton.textContent = 'Set Nickname';
+                        nicknameButton.classList.remove('disabled');
+                        nicknameButton.onclick = () => openSetNicknameModal();
+                    }
+                })
+                .catch(error => console.error(error));
+        }
+
+        async function updateGroupList() {
+            if (!contract || !accounts) return;
+            const groupIds = await contract.methods.getUserJoinedGroups(accounts[0]).call();
+            const groupList = document.getElementById('groupList');
+            groupList.innerHTML = '';
+            for (let groupId of groupIds) {
+                const group = await contract.methods.groups(groupId).call();
+                const nickname = await contract.methods.getNickname(accounts[0]).call() || accounts[0].slice(0, 6) + "...";
+                const tokenSymbol = tokens.find(t => t.address === group.paymentToken)?.symbol || "Unknown";
+                const li = document.createElement('li');
+                li.className = 'user-item';
+                li.innerHTML = `
+                    <div class="group-header">
+                        <img src="https://raw.githubusercontent.com/ShibariumMemecoin/WoofLimitOrder/refs/heads/main/images/woof.png" alt="Group">
+                        <div class="group-name">${group.name}</div>
+                    </div>
+                    <div class="status">Members: ${group.memberCount} | You: ${nickname} | Fee: ${web3.utils.fromWei(group.joinFee, "ether")} ${tokenSymbol}</div>
+                    <div class="action-buttons">
+                        <button onclick="selectGroup(${groupId})">Chat</button>
+                        <button onclick="leaveGroup(${groupId})">Leave</button>
+                    </div>
+                `;
+                groupList.appendChild(li);
+            }
+        }
+
+        function openCreateGroupModal() { document.getElementById('createGroupModal').style.display = 'flex'; }
+        function joinGroup() { document.getElementById('joinGroupModal').style.display = 'flex'; }
+        function openSetNicknameModal() { document.getElementById('setNicknameModal').style.display = 'flex'; }
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.querySelectorAll('.status').forEach(s => s.innerText = '');
+        }
+
+        function initializeTokenSelect() {
+            const tokenOptions = document.getElementById('tokenOptions');
+            tokenOptions.innerHTML = '<div class="select-item" data-value=""><img src="" alt="" style="display:none;">Select Token</div>';
+            tokens.forEach(token => {
+                const item = document.createElement('div');
+                item.className = 'select-item';
+                item.setAttribute('data-value', token.address);
+                item.innerHTML = `<img src="${token.logo}" alt="${token.symbol}"> ${token.symbol}`;
+                tokenOptions.appendChild(item);
+            });
+            setupCustomSelect('paymentTokenSelect');
+        }
+
+        function setupCustomSelect(selectId) {
+            const select = document.getElementById(selectId);
+            const selected = select.querySelector('.select-selected');
+            const items = select.querySelector('.select-items');
+            const options = items.querySelectorAll('.select-item');
+
+            selected.addEventListener('click', (e) => {
+                e.preventDefault();
+                items.classList.toggle('select-show');
+            });
+
+            options.forEach(option => {
+                option.addEventListener('click', () => {
+                    const value = option.getAttribute('data-value');
+                    const imgSrc = option.querySelector('img').src;
+                    const text = option.textContent.trim();
+                    selected.innerHTML = `<img src="${imgSrc}" alt="${text}" ${value ? '' : 'style="display:none;"'}>${text}`;
+                    select.setAttribute('data-value', value);
+                    items.classList.remove('select-show');
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!select.contains(e.target)) items.classList.remove('select-show');
+            });
+        }
+
+        async function createGroup() {
+            if (!contract || !accounts) return alert("Connect wallet first!");
+            const name = document.getElementById('groupName').value;
+            const paymentToken = document.getElementById('paymentTokenSelect').getAttribute('data-value');
+            const joinFee = document.getElementById('joinFee').value;
+            if (!paymentToken || paymentToken === "") return alert("Please select a payment token!");
+            if (!name || !joinFee) return alert("Please fill all fields!");
+            try {
+                await contract.methods.createGroup(name, paymentToken, web3.utils.toWei(joinFee, "ether")).send({ from: accounts[0] });
+                document.getElementById('createStatus').innerText = "Group created!";
+                updateGroupList();
+                updateButtons();
+                closeModal('createGroupModal');
+            } catch (error) {
+                document.getElementById('createStatus').innerText = "Failed: " + error.message;
+            }
+        }
+
+        async function joinGroupConfirm() {
+            if (!contract || !accounts) return alert("Connect wallet first!");
+            const groupId = document.getElementById('groupIdInput').value;
+            try {
+                const group = await contract.methods.groups(groupId).call();
+                const joinFeeWei = group.joinFee;
+                const joinFeeEther = web3.utils.fromWei(joinFeeWei, "ether");
+                const tokenSymbol = tokens.find(t => t.address === group.paymentToken)?.symbol || "Unknown";
+                document.getElementById('joinFeeInfo').innerText = `Join fee: ${joinFeeEther} ${tokenSymbol}`;
+                const tokenContract = new web3.eth.Contract([{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}], group.paymentToken);
+                await tokenContract.methods.approve(contractAddress, joinFeeWei).send({ from: accounts[0] });
+                await contract.methods.joinGroup(groupId).send({ from: accounts[0] });
+                document.getElementById('joinStatus').innerText = "Joined!";
+                updateGroupList();
+                if (currentGroupId === parseInt(groupId)) loadMessages();
+                closeModal('joinGroupModal');
+            } catch (error) {
+                document.getElementById('joinStatus').innerText = "Failed: " + error.message;
+            }
+        }
+
+        async function leaveGroup(groupId) {
+            if (!contract || !accounts) return alert("Connect wallet first!");
+            try {
+                await contract.methods.leaveGroup(groupId).send({ from: accounts[0] });
+                alert("Left group!");
+                updateGroupList();
+                if (currentGroupId === groupId) {
+                    currentGroupId = null;
+                    document.getElementById('messageList').innerHTML = '';
+                    document.getElementById('chatTitle').innerText = 'Select a Group';
+                    document.getElementById('messageCount').innerText = '0 messages';
+                }
+            } catch (error) {
+                alert("Failed: " + error.message);
+            }
+        }
+
+        async function selectGroup(groupId) {
+            currentGroupId = parseInt(groupId);
+            const group = await contract.methods.groups(currentGroupId).call();
+            document.getElementById('chatTitle').innerText = group.name;
+            const messages = await contract.methods.getMessages(currentGroupId, 0, 100).call();
+            document.getElementById('messageCount').innerText = `${messages.length} messages`;
+            loadMessages();
+        }
+
+        async function loadMessages() {
+            if (!contract || !accounts || !currentGroupId) return alert("Select a group first!");
+            try {
+                const joinedGroups = await contract.methods.getUserJoinedGroups(accounts[0]).call();
+                if (!joinedGroups.includes(currentGroupId.toString())) return alert("You are not a member!");
+                const messages = await contract.methods.getMessages(currentGroupId, 0, 100).call();
+                const messageList = document.getElementById('messageList');
+                if (messages.length) {
+                    const messageHTML = await Promise.all(messages.map(async msg => {
+                        const senderNickname = msg.sender === accounts[0] ? (await contract.methods.getNickname(accounts[0]).call() || accounts[0].slice(0, 6) + "...") : (await contract.methods.getNickname(msg.sender).call() || msg.sender.slice(0, 6) + "...");
+                        return `
+                            <div class="message ${msg.sender.toLowerCase() === accounts[0].toLowerCase() ? 'sent' : 'received'}">
+                                <div class="message-content">
+                                    <div class="message-sender">${senderNickname}</div>
+                                    <div class="message-text">${msg.content}</div>
+                                    <div class="message-timestamp">${new Date(msg.timestamp * 1000).toLocaleTimeString()}</div>
+                                </div>
+                            </div>
+                        `;
+                    }));
+                    messageList.innerHTML = messageHTML.join('');
+                } else {
+                    messageList.innerHTML = '<div style="text-align: center; color: #999;">No messages yet!</div>';
+                }
+                messageList.scrollTop = messageList.scrollHeight;
+            } catch (error) {
+                alert("Failed: " + error.message);
+            }
+        }
+
+        async function sendMessage() {
+            if (!contract || !accounts || !currentGroupId) return alert("Select a group first!");
+            const content = document.getElementById('messageInput').value;
+            if (!content) return;
+            try {
+                await contract.methods.sendMessage(currentGroupId, content).send({ from: accounts[0] });
+                document.getElementById('messageInput').value = '';
+                loadMessages();
+            } catch (error) {
+                alert("Failed: " + error.message);
+            }
+        }
+
+        async function setNickname() {
+            if (!contract || !accounts) return alert("Connect wallet first!");
+            const nickname = document.getElementById('nicknameInput').value;
+            try {
+                await contract.methods.setNickname(nickname).send({ from: accounts[0] });
+                document.getElementById('nicknameStatus').innerText = "Nickname set!";
+                updateGroupList();
+                updateButtons();
+                if (currentGroupId) loadMessages();
+                closeModal('setNicknameModal');
+            } catch (error) {
+                document.getElementById('nicknameStatus').innerText = "Failed: " + error.message;
+            }
+        }
+
+        function setupEventListeners() {
+            if (!contract) return;
+            contract.events.allEvents({ fromBlock: 'latest' }, (error, event) => {
+                if (!error) {
+                    if (event.event === 'MessageSent' && currentGroupId === parseInt(event.returnValues.groupId)) loadMessages();
+                    if (event.event === 'MemberJoined' && accounts[0].toLowerCase() === event.returnValues.member.toLowerCase()) updateGroupList();
+                    if (event.event === 'MemberLeft' && accounts[0].toLowerCase() === event.returnValues.member.toLowerCase()) updateGroupList();
+                    if (event.event === 'NicknameUpdated') {
+                        updateGroupList();
+                        updateButtons();
+                        if (currentGroupId) loadMessages();
+                    }
+                }
+            });
+        }
+
+        document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
+
+        window.ethereum?.on('chainChanged', (chainId) => {
+            if (parseInt(chainId, 16) !== 109) {
+                document.getElementById('networkStatus').innerText = "Switched to wrong network. Please reconnect to Shibarium.";
+                web3 = null;
+                contract = null;
+                accounts = null;
+                document.getElementById('connectWalletButton').textContent = 'Connect Wallet';
+            } else {
+                connectWallet();
+            }
+        });
+
+        window.ethereum?.on('accountsChanged', (newAccounts) => {
+            if (newAccounts.length) {
+                connectWallet();
+            } else {
+                document.getElementById('networkStatus').innerText = "Wallet disconnected. Please reconnect.";
+                web3 = null;
+                contract = null;
+                accounts = null;
+                document.getElementById('connectWalletButton').textContent = 'Connect Wallet';
+            }
+        });
+
+        window.addEventListener('load', () => {
+            if (!window.location.protocol.startsWith('http')) {
+                document.getElementById('networkStatus').innerHTML = 'Please run this page via a local server (e.g., "npx serve") to connect MetaMask.';
+            } else if (!window.ethereum) {
+                document.getElementById('networkStatus').innerHTML = 'No wallet detected. Please install <a href="https://metamask.io" target="_blank">MetaMask</a>.';
+            }
+        });
+    </script>
+</body>
+</html>
