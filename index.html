@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WoofChat - Shiba Empire</title>
+    <title>WoofChat</title>
+    <link rel="icon" type="image/png" href="./images/favicon.png">
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -63,6 +64,9 @@
             font-size: 1em;
             width: 100%;
             text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .connect-section button:hover {
             background: #e68a00;
@@ -238,6 +242,9 @@
             font-size: 0.7em;
             color: #999;
             margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .message-text {
             word-wrap: break-word;
@@ -359,6 +366,24 @@
             font-size: 0.9em;
             color: #ff9100;
         }
+        .verified-blue {
+            width: 12px;
+            height: 12px;
+            background: url('./images/1.png') no-repeat center;
+            background-size: contain;
+        }
+        .verified-orange {
+            width: 12px;
+            height: 12px;
+            background: url('./images/2.png') no-repeat center;
+            background-size: contain;
+        }
+        .verified-gold {
+            width: 12px;
+            height: 12px;
+            background: url('./images/3.png') no-repeat center;
+            background-size: contain;
+        }
         @media (max-width: 600px) {
             .container { height: 100vh; border-radius: 0; box-shadow: none; }
             .sidebar { width: 35%; }
@@ -434,31 +459,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
     <script>
-        let web3, accounts, contract;
+        let web3, accounts, contract, noneTokenContract;
         const contractAddress = "0xf34614AaBF9F83cF484c7CA29F6C76AD2be6c00B";
-        const contractABI = [
-            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":false,"internalType":"string","name":"name","type":"string"},{"indexed":true,"internalType":"address","name":"creator","type":"address"}],"name":"GroupCreated","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":true,"internalType":"address","name":"member","type":"address"}],"name":"MemberJoined","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":true,"internalType":"address","name":"member","type":"address"}],"name":"MemberLeft","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":true,"internalType":"address","name":"sender","type":"address"},{"indexed":false,"internalType":"string","name":"content","type":"string"}],"name":"MessageSent","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"newNickname","type":"string"},{"indexed":false,"internalType":"bool","name":"isInitialSet","type":"bool"}],"name":"NicknameUpdated","type":"event"},
-            {"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"address","name":"paymentToken","type":"address"},{"internalType":"uint256","name":"joinFee","type":"uint256"}],"name":"createGroup","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"}],"name":"getGroupMembersCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-            {"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"},{"internalType":"uint256","name":"startIndex","type":"uint256"},{"internalType":"uint256","name":"count","type":"uint256"}],"name":"getMessages","outputs":[{"components":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"}],"internalType":"struct WoofChat.Message[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
-            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getNickname","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
-            {"inputs":[{"internalType":"address","name":"creator","type":"address"}],"name":"getGroupIdByCreator","outputs":[{"internalType":"bool","name":"hasGroup","type":"bool"},{"internalType":"uint256","name":"groupId","type":"uint256"}],"stateMutability":"view","type":"function"},
-            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserJoinedGroups","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},
-            {"inputs":[{"internalType":"string","name":"nickname","type":"string"}],"name":"isNicknameAvailable","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
-            {"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"}],"name":"joinGroup","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"}],"name":"leaveGroup","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"},{"internalType":"string","name":"content","type":"string"}],"name":"sendMessage","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"string","name":"nickname","type":"string"}],"name":"setNickname","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"tokenAddress","type":"address"}],"name":"withdrawAllTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[],"name":"withdrawBONE","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"groups","outputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"address","name":"paymentToken","type":"address"},{"internalType":"uint256","name":"joinFee","type":"uint256"},{"internalType":"uint256","name":"memberCount","type":"uint256"}],"stateMutability":"view","type":"function"},
-            {"stateMutability":"payable","type":"receive"}
-        ];
+        const noneTokenAddress = "0x64E19b6a167878d2483d166212A3c2c68b1eB842";
+        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":false,"internalType":"string","name":"name","type":"string"},{"indexed":true,"internalType":"address","name":"creator","type":"address"}],"name":"GroupCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":true,"internalType":"address","name":"member","type":"address"}],"name":"MemberJoined","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":true,"internalType":"address","name":"member","type":"address"}],"name":"MemberLeft","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"groupId","type":"uint256"},{"indexed":true,"internalType":"address","name":"sender","type":"address"},{"indexed":false,"internalType":"string","name":"content","type":"string"}],"name":"MessageSent","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"newNickname","type":"string"},{"indexed":false,"internalType":"bool","name":"isInitialSet","type":"bool"}],"name":"NicknameUpdated","type":"event"},{"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"address","name":"paymentToken","type":"address"},{"internalType":"uint256","name":"joinFee","type":"uint256"}],"name":"createGroup","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"}],"name":"getGroupMembersCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"},{"internalType":"uint256","name":"startIndex","type":"uint256"},{"internalType":"uint256","name":"count","type":"uint256"}],"name":"getMessages","outputs":[{"components":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"}],"internalType":"struct WoofChat.Message[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getNickname","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"creator","type":"address"}],"name":"getGroupIdByCreator","outputs":[{"internalType":"bool","name":"hasGroup","type":"bool"},{"internalType":"uint256","name":"groupId","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserJoinedGroups","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"string","name":"nickname","type":"string"}],"name":"isNicknameAvailable","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"}],"name":"joinGroup","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"}],"name":"leaveGroup","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"groupId","type":"uint256"},{"internalType":"string","name":"content","type":"string"}],"name":"sendMessage","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"nickname","type":"string"}],"name":"setNickname","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"tokenAddress","type":"address"}],"name":"withdrawAllTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"withdrawBONE","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"groups","outputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"address","name":"paymentToken","type":"address"},{"internalType":"uint256","name":"joinFee","type":"uint256"},{"internalType":"uint256","name":"memberCount","type":"uint256"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}];
+        const noneTokenABI = [{"inputs":[],"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"BoneRewardPending","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"BoneRewardsLocked","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"BoneWithdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"BoneCollectedUpdated","type":"event"},{"anonymous":false,"inputs":[],"name":"MiningEnded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"NoneBurned","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newValue","type":"uint256"}],"name":"NonePerBlockUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"node","type":"address"}],"name":"NodeAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":true,"internalType":"address","name":"referrer","type":"address"}],"name":"ReferralAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"totalAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"nodeAmount","type":"uint256"}],"name":"RewardsClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"nodeId","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Staked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"nodeId","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"StakeWithdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[],"name":"BONE_PAYMENT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"INITIAL_MINING_REWARD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"INITIAL_STAKE_REWARD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAX_BONE_REWARDS","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAX_NODES","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAX_SUPPLY","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MIN_MINING_REWARD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MIN_STAKE_REWARD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MIN_STAKE_UNIT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"NODE_PAYMENT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"REFERRAL_BONUS_PERCENTAGE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"becomeNode","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"boneCollected","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"burn","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getContractStats","outputs":[{"internalType":"uint256","name":"boneBalance","type":"uint256"},{"internalType":"uint256","name":"noneTotalSupply","type":"uint256"},{"internalType":"uint256","name":"blockReward","type":"uint256"},{"internalType":"uint256","name":"contractNone","type":"uint256"},{"internalType":"bool","name":"miningEndedStatus","type":"bool"},{"internalType":"uint256","name":"nodesCount","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"nodeId","type":"uint256"}],"name":"getNodeStakes","outputs":[{"internalType":"uint256","name":"stakesTotal","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getReductionProgress","outputs":[{"internalType":"uint256","name":"reductionsDone","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getReferralInfo","outputs":[{"internalType":"uint256","name":"count","type":"uint256"},{"internalType":"uint256","name":"reward","type":"uint256"},{"internalType":"address","name":"referrer","type":"address"},{"internalType":"address[10]","name":"path","type":"address[10]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getRewardInfo","outputs":[{"internalType":"uint256","name":"perBlock","type":"uint256"},{"internalType":"uint256","name":"pendingBone","type":"uint256"},{"internalType":"uint256","name":"totalBone","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getStakeInfo","outputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"nodeId","type":"uint256"},{"internalType":"uint256","name":"lastBlock","type":"uint256"},{"internalType":"uint256","name":"stakeReward","type":"uint256"},{"internalType":"uint256","name":"nodeReward","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getStakingStats","outputs":[{"internalType":"uint256","name":"totalStakedAmount","type":"uint256"},{"internalType":"uint256","name":"totalNodeRewardsAmount","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserStatus","outputs":[{"internalType":"bool","name":"joined","type":"bool"},{"internalType":"bool","name":"paidBone","type":"bool"},{"internalType":"bool","name":"nodeStatus","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"hasJoined","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"hasPaidBone","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"isNode","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"referrer","type":"address"},{"internalType":"address","name":"user","type":"address"}],"name":"isReferral","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"isUserNode","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_referrer","type":"address"}],"name":"joinWithReferrer","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"lastWithdrawalBlock","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"miningEnded","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"nodeCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"nodeAddresses","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"nodeTotalStakes","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"nonePerBlock","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"pendingBoneRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"referralCounts","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"referralPath","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"referrers","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"nodeId","type":"uint256"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"stakeToNode","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"startBlock","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"stakedAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"lastUpdateBlock","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalBoneRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalMinedAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalMinedBlocks","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalNodeRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalStaked","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"userInfo","outputs":[{"internalType":"uint256","name":"principal","type":"uint256"},{"internalType":"uint256","name":"lastRewardBlock","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"userNodeStake","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"withdrawAllBone","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"withdrawBoneWithReserve","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"withdrawStake","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserNodeId","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
         const shibarium = { chainId: 109, chainName: 'Shibarium', nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 }, rpcUrls: ['https://rpc.shibrpc.com'], blockExplorerUrls: ['https://shibariumscan.io'] };
         const tokens = [
             { address: "0xeCe898EdCc0AF91430603175F945D8de75291c70", symbol: "DAMN", logo: "images/damn.png" },
@@ -495,8 +500,11 @@
                         else throw switchError;
                     }
                 }
-                connectButton.textContent = `Connected: ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`;
                 contract = new web3.eth.Contract(contractABI, contractAddress);
+                noneTokenContract = new web3.eth.Contract(noneTokenABI, noneTokenAddress);
+                const nickname = await contract.methods.getNickname(accounts[0]).call() || accounts[0].slice(0, 6) + "..." + accounts[0].slice(-4);
+                const badges = await getUserBadges(accounts[0]);
+                connectButton.innerHTML = `Connected: ${nickname}${badges}`;
                 status.innerText = "Connected to Shibarium";
                 updateButtons();
                 updateGroupList();
@@ -526,7 +534,6 @@
                     }
                 })
                 .catch(error => console.error(error));
-
             contract.methods.getNickname(accounts[0]).call()
                 .then(nickname => {
                     const nicknameButton = document.getElementById('setNicknameButton');
@@ -595,12 +602,10 @@
             const selected = select.querySelector('.select-selected');
             const items = select.querySelector('.select-items');
             const options = items.querySelectorAll('.select-item');
-
             selected.addEventListener('click', (e) => {
                 e.preventDefault();
                 items.classList.toggle('select-show');
             });
-
             options.forEach(option => {
                 option.addEventListener('click', () => {
                     const value = option.getAttribute('data-value');
@@ -611,7 +616,6 @@
                     items.classList.remove('select-show');
                 });
             });
-
             document.addEventListener('click', (e) => {
                 if (!select.contains(e.target)) items.classList.remove('select-show');
             });
@@ -682,6 +686,54 @@
             loadMessages();
         }
 
+        async function getUserBadges(sender) {
+            if (!noneTokenContract) {
+                console.log("noneTokenContract not initialized for sender:", sender);
+                return '';
+            }
+            try {
+                const userStatus = await noneTokenContract.methods.getUserStatus(sender).call();
+                const joined = userStatus[0];
+                const paidBone = userStatus[1];
+                const nodeStatus = userStatus[2];
+                console.log(`User ${sender}: joined=${joined}, paidBone=${paidBone}, nodeStatus=${nodeStatus}`);
+
+                const referralInfo = await noneTokenContract.methods.getReferralInfo(sender).call();
+                const referralCount = parseInt(referralInfo[0]) || 0;
+                console.log(`User ${sender} referral count: ${referralCount}`);
+
+                let badges = '';
+                if (paidBone === true) {
+                    badges += '<span class="verified-blue"></span>';
+                    console.log(`User ${sender} has Blue V (paidBone)`);
+                }
+                if (referralCount >= 10) {
+                    badges += '<span class="verified-orange"></span>';
+                    console.log(`User ${sender} has Orange V (referralCount >= 10)`);
+                }
+                if (nodeStatus === true) {
+                    badges += '<span class="verified-gold"></span>';
+                    console.log(`User ${sender} has Gold V (nodeStatus)`);
+                }
+                if (badges === '') {
+                    console.log(`User ${sender} has no badges`);
+                }
+                return badges;
+            } catch (error) {
+                console.error("Badge check failed for", sender, ":", error.message);
+                return '';
+            }
+        }
+
+        async function refreshBadges() {
+            if (!accounts || !contract || !noneTokenContract) return;
+            const connectButton = document.getElementById('connectWalletButton');
+            const nickname = await contract.methods.getNickname(accounts[0]).call() || accounts[0].slice(0, 6) + "..." + accounts[0].slice(-4);
+            const badges = await getUserBadges(accounts[0]);
+            connectButton.innerHTML = `Connected: ${nickname}${badges}`;
+            if (currentGroupId) loadMessages();
+        }
+
         async function loadMessages() {
             if (!contract || !accounts || !currentGroupId) return alert("Select a group first!");
             try {
@@ -692,10 +744,11 @@
                 if (messages.length) {
                     const messageHTML = await Promise.all(messages.map(async msg => {
                         const senderNickname = msg.sender === accounts[0] ? (await contract.methods.getNickname(accounts[0]).call() || accounts[0].slice(0, 6) + "...") : (await contract.methods.getNickname(msg.sender).call() || msg.sender.slice(0, 6) + "...");
+                        const badges = await getUserBadges(msg.sender);
                         return `
                             <div class="message ${msg.sender.toLowerCase() === accounts[0].toLowerCase() ? 'sent' : 'received'}">
                                 <div class="message-content">
-                                    <div class="message-sender">${senderNickname}</div>
+                                    <div class="message-sender">${senderNickname}${badges}</div>
                                     <div class="message-text">${msg.content}</div>
                                     <div class="message-timestamp">${new Date(msg.timestamp * 1000).toLocaleTimeString()}</div>
                                 </div>
@@ -734,6 +787,7 @@
                 updateGroupList();
                 updateButtons();
                 if (currentGroupId) loadMessages();
+                refreshBadges();
                 closeModal('setNicknameModal');
             } catch (error) {
                 document.getElementById('nicknameStatus').innerText = "Failed: " + error.message;
@@ -741,7 +795,8 @@
         }
 
         function setupEventListeners() {
-            if (!contract) return;
+            if (!contract || !noneTokenContract) return;
+
             contract.events.allEvents({ fromBlock: 'latest' }, (error, event) => {
                 if (!error) {
                     if (event.event === 'MessageSent' && currentGroupId === parseInt(event.returnValues.groupId)) loadMessages();
@@ -751,7 +806,29 @@
                         updateGroupList();
                         updateButtons();
                         if (currentGroupId) loadMessages();
+                        refreshBadges();
                     }
+                }
+            });
+
+            noneTokenContract.events.ReferralAdded({ fromBlock: 'latest' }, (error, event) => {
+                if (!error && event.returnValues.user.toLowerCase() === accounts[0].toLowerCase()) {
+                    console.log("ReferralAdded event detected for user:", accounts[0]);
+                    refreshBadges();
+                }
+            });
+
+            noneTokenContract.events.NodeAdded({ fromBlock: 'latest' }, (error, event) => {
+                if (!error && event.returnValues.node.toLowerCase() === accounts[0].toLowerCase()) {
+                    console.log("NodeAdded event detected for user:", accounts[0]);
+                    refreshBadges();
+                }
+            });
+
+            noneTokenContract.events.BoneRewardPending({ fromBlock: 'latest' }, (error, event) => {
+                if (!error && event.returnValues.user.toLowerCase() === accounts[0].toLowerCase()) {
+                    console.log("BoneRewardPending event detected for user:", accounts[0]);
+                    refreshBadges();
                 }
             });
         }
